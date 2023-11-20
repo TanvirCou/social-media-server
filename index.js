@@ -5,6 +5,7 @@ const morgan = require("morgan");
 const dotenv = require("dotenv");
 const userHandler = require("./routeHandler/userHandler");
 const authHandler = require("./routeHandler/authHandler");
+const postHandler = require("./routeHandler/postHandler");
 
 const app = express();
 dotenv.config();
@@ -18,6 +19,7 @@ mongoose.connect(process.env.MONGO_URL)
 
 app.use("/api/users", userHandler)
 app.use("/api/auth", authHandler);
+app.use("/api/posts", postHandler);
 
 app.listen(3000, () => {
     console.log("Server ready");
