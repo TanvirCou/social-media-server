@@ -4,7 +4,26 @@ const Post = require("../schemas/postSchema");
 const User = require("../schemas/userSchema");
 
 router.post("/", async(req, res) => {
-    const newPost = new Post(req.body);
+    const file = req.files.file;
+    const userId = req.body.userId;
+    const desc = req.body.desc;
+
+    const newImg = file.data;
+    const encImg = newImg.toString('base64');
+
+    var img = {
+      contentType: file.mimetype,
+      size: file.size,
+      img: Buffer.from(encImg, 'base64')
+    }
+    const query = {userId, desc, img};
+    // try {
+    //     await Post.create(query);
+    //     res.status(200).json("Post created");
+    // } catch(err) {
+    //     res.status(500).json(err);
+    // }
+    const newPost = new Post(query);
     try {
         const post = await newPost.save();
         res.status(200).json("Post created");
@@ -65,9 +84,9 @@ router.get("/:id", async(req, res) => {
     }
 });
 
-router.get("/timeline/allPost", async(req, res) => {
+router.get("/timeline/:userId", async(req, res) => {
     try {
-        const currentUser = await User.findById(req.body.userId);
+        const currentUser = await User.findById(req.params.userId);
         const userPosts = await Post.find({ userId: currentUser._id});
         const friendPosts = await Promise.all(
         currentUser.following.map(friendId => {
@@ -75,6 +94,16 @@ router.get("/timeline/allPost", async(req, res) => {
             })
         );
         res.status(200).json(userPosts.concat(...friendPosts));
+    } catch(err) {
+        res.status(500).json(err);
+    }
+});
+
+router.get("/profile/:name", async(req, res) => {
+    try {
+        const user = await User.findOne({name: req.params.name});
+        const posts = await Post.find({userId: user._id}); 
+        res.status(200).json(posts);
     } catch(err) {
         res.status(500).json(err);
     }
