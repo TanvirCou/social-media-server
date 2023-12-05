@@ -3,33 +3,57 @@ const router = express.Router();
 const Post = require("../schemas/postSchema");
 const User = require("../schemas/userSchema");
 
+const dotenv = require("dotenv");
+var cloudinary = require("cloudinary").v2;
+
+dotenv.config();
+
+const cloud_name = process.env.CLOUD_NAME;
+const api_key = process.env.API_KEY;
+const api_secret = process.env.API_SECRET;
+
+cloudinary.config({
+  cloud_name: cloud_name,
+  api_key: api_key,
+  api_secret: api_secret,
+});
+
+const opts = {
+  overwrite: true,
+  invalidate: true,
+  resource_type: "auto",
+};
+
 router.post("/", async(req, res) => {
     const file = req.files.file;
     const userId = req.body.userId;
     const desc = req.body.desc;
 
-    const newImg = file.data;
-    const encImg = newImg.toString('base64');
+    // const newImg = file.data;
+    // const encImg = newImg.toString('base64');
 
-    var img = {
-      contentType: file.mimetype,
-      size: file.size,
-      img: Buffer.from(encImg, 'base64')
-    }
-    const query = {userId, desc, img};
-    // try {
-    //     await Post.create(query);
-    //     res.status(200).json("Post created");
-    // } catch(err) {
-    //     res.status(500).json(err);
+    // var img = {
+    //   contentType: file.mimetype,
+    //   size: file.size,
+    //   img: Buffer.from(encImg, 'base64')
     // }
-    const newPost = new Post(query);
+    
     try {
-        const post = await newPost.save();
+        const result = await cloudinary.uploader.upload(file.tempFilePath);
+        const img = result.secure_url;
+        const query = {userId, desc, img};
+        await Post.create(query);
         res.status(200).json("Post created");
     } catch(err) {
         res.status(500).json(err);
     }
+    // const newPost = new Post(query);
+    // try {
+    //     const post = await newPost.save();
+    //     res.status(200).json("Post created");
+    // } catch(err) {
+    //     res.status(500).json(err);
+    // }
 });
 
 router.put("/:id", async(req, res) => {

@@ -19,7 +19,9 @@ app.use(express.json());
 app.use(cors());
 app.use(helmet());
 app.use(morgan("common"));
-app.use(fileUpload());
+app.use(fileUpload({
+    useTempFiles: true
+}));
 // app.use(express.static('api/posts/'));
 
 mongoose.connect(process.env.MONGO_URL)

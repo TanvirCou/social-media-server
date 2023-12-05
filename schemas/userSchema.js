@@ -20,11 +20,11 @@ const userSchema = new mongoose.Schema({
         min: 6
     },
     profilePicture: {
-        type: String,
+        type: Object,
         default: ""
     },
     coverPicture: {
-        type: String,
+        type: Object,
         default: ""
     },
     followers: {
@@ -48,8 +48,12 @@ const userSchema = new mongoose.Schema({
         max: 50
     },
     relationship: {
-        type: Number,
-        enum: [1, 2, 3]
+        type: String,
+        enum: ['Single', 'In a relationship', 'Married'],
+        default: 'Single'
+    },
+    birthday: {
+        type: Date,
     },
     isAdmin: {
         type: Boolean,
