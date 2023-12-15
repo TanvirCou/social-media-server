@@ -3,22 +3,6 @@ const bcrypt = require("bcrypt");
 const router = express.Router();
 const User = require("../schemas/userSchema");
 
-const dotenv = require("dotenv");
-var cloudinary = require("cloudinary").v2;
-
-dotenv.config();
-
-const cloud_name = process.env.CLOUD_NAME;
-const api_key = process.env.API_KEY;
-const api_secret = process.env.API_SECRET;
-
-cloudinary.config({
-  cloud_name: cloud_name,
-  api_key: api_key,
-  api_secret: api_secret,
-});
-
-
 
 router.put('/:id', async(req, res) => {
     if(req.body.userId === req.params.id || req.body.isAdmin) {
@@ -30,31 +14,6 @@ router.put('/:id', async(req, res) => {
                 return res.status(500).json(err);
             }
         }
-        
-       
-      
-            if(req?.files?.dpFile) {
-                const file = req.files.dpFile;
-                try {
-                    const result = await cloudinary.uploader.upload(file.tempFilePath);
-                    const img = result.secure_url;
-                    req.body.profilePicture = img;
-                } catch(err) {
-                    console.log(err);
-                }
-            }    
-           
-           
-            if(req?.files?.coverFile) {
-                const file = req.files.coverFile;
-                try {
-                    const result = await cloudinary.uploader.upload(file.tempFilePath);
-                    const img = result.secure_url;
-                    req.body.coverPicture = img;
-                } catch(err) {
-                    console.log(err);
-                }
-            }
         
         try {
             const user = await User.findByIdAndUpdate(req.params.id, { $set: req.body });

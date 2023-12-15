@@ -3,41 +3,10 @@ const router = express.Router();
 const Post = require("../schemas/postSchema");
 const User = require("../schemas/userSchema");
 
-const dotenv = require("dotenv");
-var cloudinary = require("cloudinary").v2;
-
-dotenv.config();
-
-const cloud_name = process.env.CLOUD_NAME;
-const api_key = process.env.API_KEY;
-const api_secret = process.env.API_SECRET;
-
-cloudinary.config({
-  cloud_name: cloud_name,
-  api_key: api_key,
-  api_secret: api_secret,
-});
-
 
 router.post("/", async(req, res) => {
-    const file = req.files.file;
-    const userId = req.body.userId;
-    const desc = req.body.desc;
-
-    // const newImg = file.data;
-    // const encImg = newImg.toString('base64');
-
-    // var img = {
-    //   contentType: file.mimetype,
-    //   size: file.size,
-    //   img: Buffer.from(encImg, 'base64')
-    // }
-    
     try {
-        const result = await cloudinary.uploader.upload(file.tempFilePath);
-        const img = result.secure_url;
-        const query = {userId, desc, img};
-        await Post.create(query);
+        await Post.create(req.body);
         res.status(200).json("Post created");
     } catch(err) {
         res.status(500).json(err);
@@ -68,7 +37,10 @@ router.put("/:id", async(req, res) => {
 router.delete("/:id", async(req, res) => {
     try {
         const post = await Post.findById(req.params.id);
+        console.log(post.userId);
+            console.log(req.body);
         if(post.userId === req.body.userId) {
+            
             await post.deleteOne();
             res.status(200).json("Post deleted");
         } else {
@@ -89,6 +61,17 @@ router.put("/:id/like", async(req, res) => {
             await post.updateOne({ $pull: {likes: req.body.userId}});
             res.status(200).json("Post has been disliked");
         }
+    } catch(err) {
+        res.status(500).json(err);
+    }
+});
+
+router.put("/:id/comments", async(req, res) => {
+    try {
+        const post = await Post.findById(req.params.id);
+            await post.updateOne({ $push: {comments: req.body}});
+            res.status(200).json("commented");
+        
     } catch(err) {
         res.status(500).json(err);
     }
