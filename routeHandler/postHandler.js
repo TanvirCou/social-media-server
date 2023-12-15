@@ -18,11 +18,6 @@ cloudinary.config({
   api_secret: api_secret,
 });
 
-const opts = {
-  overwrite: true,
-  invalidate: true,
-  resource_type: "auto",
-};
 
 router.post("/", async(req, res) => {
     const file = req.files.file;

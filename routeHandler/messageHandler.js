@@ -3,10 +3,18 @@ const router = express.Router();
 const Message = require("../schemas/messageSchema");
 
 router.post("/", async(req, res) => {
-    const newMessage = new Message(req.body);
+    const { conversation, senderId, text } = req.body;
+
+    const newMessage = {
+        conversation: conversation,
+        senderId: senderId,
+        text: text
+    };
     try {
-        const savedMessage = await newMessage.save();
-        res.status(200).json(savedMessage);
+        let message = await Message.create(newMessage);
+
+            message = await message.populate("conversation");
+        res.status(200).json(message);
     } catch(err) {
         res.status(500).json(err);
     }
@@ -14,7 +22,7 @@ router.post("/", async(req, res) => {
 
 router.get("/:conversationId", async(req, res) => {
     try {
-        const message = await Message.find({conversationId: req.params.conversationId});
+        const message = await Message.find({conversation: req.params.conversationId}).populate("conversation");;
         res.status(200).json(message);
     } catch(err) {
         res.status(500).json(err);
