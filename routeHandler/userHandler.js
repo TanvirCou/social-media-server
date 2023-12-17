@@ -122,4 +122,17 @@ router.put('/:id/unfollow', async(req, res) => {
     }
 });
 
+router.post("/search", async (req, res) => {
+    const keyWord = req.query.search ?
+        { $or: [{ name: { $regex: req.query.search, $options: "i" } }, { email: { $regex: req.query.search, $options: "i" } }], }
+        : {};
+
+    try {
+        const users = await User.find(keyWord).find({ _id: { $ne: req.body.userId } });
+        res.status(200).json(users);
+    } catch (err) {
+        res.status(500).json(err);
+    }
+});
+
 module.exports = router;

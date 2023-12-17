@@ -3,7 +3,7 @@ const router = express.Router();
 const Conversation = require("../schemas/conversationSchema");
 
 //add
-router.post("/", async(req, res) => {
+router.post("/createConvo", async(req, res) => {
     const newConversation = new Conversation({
         members: [req.body.senderId, req.body.receiverId]
     });
