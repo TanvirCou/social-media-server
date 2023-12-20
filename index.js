@@ -4,9 +4,6 @@ const helmet = require("helmet");
 const morgan = require("morgan");
 const dotenv = require("dotenv");
 const cors = require("cors");
-const multer  = require('multer');
-const path = require('path');
-const fileUpload = require('express-fileupload');
 const userHandler = require("./routeHandler/userHandler");
 const authHandler = require("./routeHandler/authHandler");
 const postHandler = require("./routeHandler/postHandler");
@@ -17,12 +14,8 @@ const app = express();
 dotenv.config();
 app.use(express.json());
 app.use(cors());
-// app.use(helmet());
-// app.use(morgan("common"));
-app.use(fileUpload({
-    useTempFiles: true
-}));
-// app.use(express.static('api/posts/'));
+app.use(helmet());
+app.use(morgan("common"));
 
 mongoose.connect(process.env.MONGO_URL)
 .then(() => console.log("Connected to MongoDB"))
@@ -34,30 +27,6 @@ app.use("/api/posts", postHandler);
 app.use("/api/conversations", conversationHandler);
 app.use("/api/messages", messageHandler);
 
-// app.use("/images", express.static(path.join(__dirname, "public/images")));
-
-// const UPLOADS_FOLDER = './uploads/';
-
-// const storage = multer.diskStorage({
-//   destination: (req, file, cb) => {
-//     cb(null, UPLOADS_FOLDER);
-//   },
-//   filename: (req, file, cb) => {
-//     cb(null, Date.now() + file.originalname);
-//     console.log(req);
-//   },
-// });
-
-// const upload = multer({ storage: storage });
-
-// app.post("/api/upload", upload.single("file"), (req, res) => {
-//   try {
-//     return res.status(200).json("File uploded successfully");
-//   } catch (error) {
-//     console.error(error);
-//   }
-// });
-
 const server = app.listen(3000);
 
 const io = require("socket.io")(server, {
@@ -66,6 +35,21 @@ const io = require("socket.io")(server, {
         origin: "http://127.0.0.1:5173"
     },
 });
+
+let users = [];
+
+const addUser = (userId, socketId) => {
+  !users.some((user) => user.userId === userId) &&
+    users.push({ userId, socketId });
+};
+
+const removeUser = (socketId) => {
+  users = users.filter((user) => user.socketId !== socketId);
+};
+
+const getUser = (userId) => {
+  return users.find((user) => user.userId === userId);
+};
 
 io.on("connection", (socket) => {
     console.log("connected to socket");
@@ -77,8 +61,13 @@ io.on("connection", (socket) => {
 
     socket.on("join chat", (room) => {
         socket.join(room);
-        console.log(room);
+        console.log(socket.id);
     });
+
+    socket.on("addUser", (userId) => {
+        addUser(userId, socket.id);
+        io.emit("getUsers", users);
+      });
 
     socket.on("typing", (room) => {
         socket.in(room).emit("typing");
@@ -103,5 +92,11 @@ io.on("connection", (socket) => {
             });
         }
     });
+
+    socket.on("disconnect", () => {
+        console.log("a user disconnected!");
+        removeUser(socket.id);
+        io.emit("getUsers", users);
+      });
     
 });
