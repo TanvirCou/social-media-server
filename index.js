@@ -17,6 +17,8 @@ app.use(cors());
 app.use(helmet());
 app.use(morgan("common"));
 
+const port = 5000;
+
 mongoose.connect(process.env.MONGO_URL)
 .then(() => console.log("Connected to MongoDB"))
 .catch((err) => console.log(err.message));
@@ -27,7 +29,7 @@ app.use("/api/posts", postHandler);
 app.use("/api/conversations", conversationHandler);
 app.use("/api/messages", messageHandler);
 
-const server = app.listen(3000);
+const server = app.listen(process.env.PORT || port);
 
 const io = require("socket.io")(server, {
     pingTimeout: 60000,
@@ -45,10 +47,6 @@ const addUser = (userId, socketId) => {
 
 const removeUser = (socketId) => {
   users = users.filter((user) => user.socketId !== socketId);
-};
-
-const getUser = (userId) => {
-  return users.find((user) => user.userId === userId);
 };
 
 io.on("connection", (socket) => {
